@@ -185,9 +185,9 @@ similar to [reference artist/track]"
 ### Cost Comparison
 | Production Type | Traditional Cost | Traditional Time | Grammy Engine Cost | Grammy Engine Time |
 |-----------------|------------------|------------------|--------------------|--------------------|
-| Simple Beat | $500-$2,000 | 1-3 days | $0 (Pro plan) | 45 seconds |
-| Full Track | $2,000-$10,000 | 1-2 weeks | $0 (Pro plan) | 60 seconds |
-| Orchestral | $50,000-$150,000 | 2-4 weeks | $0 (Pro plan) | 97 seconds |
+| Simple Beat | $500-$2,000 | 1-3 days | $29/mo unlimited | 45 seconds |
+| Full Track | $2,000-$10,000 | 1-2 weeks | $29/mo unlimited | 60 seconds |
+| Orchestral | $50,000-$150,000 | 2-4 weeks | $29/mo unlimited | 97 seconds |
 
 ---
 

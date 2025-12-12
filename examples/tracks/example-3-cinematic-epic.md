@@ -12,7 +12,7 @@
 
 ```
 "Epic cinematic orchestral track with massive drums, heroic brass, emotional strings,
-choir, building to powerful climax, perfect for movie trailers, inspire and uplift,
+choir, building to powerful climax, perfect for movie trailers, inspiring and uplifting,
 hybrid orchestral with modern production, 140 BPM half-time"
 ```
 

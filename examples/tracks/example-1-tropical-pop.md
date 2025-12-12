@@ -157,6 +157,8 @@ Sunset paradise, dancing through the night
 Feel the ocean's heartbeat, everything's alright
 Golden skies above, freedom in the air
 Sunset paradise, we haven't got a care
+
+... (Full lyrics included with track download)
 ```
 
 ---
