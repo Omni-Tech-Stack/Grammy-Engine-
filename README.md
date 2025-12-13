@@ -1292,7 +1292,7 @@ A: We offer "style transfer" - analyzing a reference track's style and applying 
 A: Be specific! Include genre, BPM, mood, instruments, and use case. See our [Prompt Engineering Guide](#-prompt-engineering-guide) for detailed tips and examples.
 
 **Q: Can I collaborate with other users?**  
-A: Yes! Label and Enterprise plans include team features: shared workspaces, collaborative prompts, and project management. Coming Q2 2025.
+A: Yes! Label and Enterprise plans include team features: shared workspaces, collaborative prompts, and project management. Coming soon.
 
 **Q: What if I don't like the result?**  
 A: Generate unlimited variations instantly (Pro plan). Tweak your prompt and regenerate. Each attempt takes 30-90 seconds. Iterate until perfect!
