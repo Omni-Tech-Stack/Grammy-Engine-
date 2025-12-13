@@ -1176,6 +1176,7 @@ Grammy Engine quality benchmarks:
 - ✅ Mobile Apps (iOS, Android, coming soon)
 - ✅ CLI Tools (Python, Node.js)
 
+> **Note:** Desktop Apps (Electron-based) and Mobile Apps (iOS, Android) are planned features and are not currently available. There is no confirmed release date. Please check back for updates.
 ---
 
 ## 🔐 Security
