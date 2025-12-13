@@ -1321,7 +1321,7 @@ A: Yes! Join our Discord to share your tracks, get feedback, and connect with ot
 
 ### **Join Our Community**
 
-- 💬 **Discord:** [Join 5,000+ creators](https://discord.gg/grammyengine) - Get help, share tracks, beta features
+- 💬 **Discord:** [Join our growing community](https://discord.gg/grammyengine) - Get help, share tracks, beta features
 - 🐦 **Twitter/X:** [@GrammyEngine](https://twitter.com/grammyengine) - Updates, tips, showcases
 - 📸 **Instagram:** [@grammy.engine](https://instagram.com/grammy.engine) - Visual content, tutorials
 - 🎵 **TikTok:** [@grammyengine](https://tiktok.com/@grammyengine) - Quick tips, demos
