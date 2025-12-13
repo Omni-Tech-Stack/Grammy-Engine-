@@ -21,7 +21,7 @@ audiocraft==1.2.0
 torch==2.1.2
 torchaudio==2.1.2
 transformers==4.37.0
-matchering==2.0.8
+matchering==2.0.6
 librosa==0.10.1
 soundfile==0.12.1
 
