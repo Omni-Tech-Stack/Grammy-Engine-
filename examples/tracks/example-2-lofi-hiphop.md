@@ -135,14 +135,16 @@ Based on Grammy Meter™ analysis:
 
 **Total Generation Time:** 58 seconds
 
-## 📁 File Downloads
+## 📁 File Structure (Output Example)
+
+**Note:** The file structure below represents example output files that would be generated. Actual audio files are not included in this repository.
 
 ```
 examples/tracks/midnight-study-session/
-├── midnight-study-session-master.wav   # Full quality master (24-bit/48kHz)
-├── midnight-study-session-320.mp3      # High quality MP3 (320kbps)
-├── midnight-study-session-1hour.wav    # Extended 1-hour loop version
-├── midnight-study-session-stems/       # Individual track stems
+├── midnight-study-session-master.wav   # Full quality master (24-bit/48kHz) [output example]
+├── midnight-study-session-320.mp3      # High quality MP3 (320kbps) [output example]
+├── midnight-study-session-1hour.wav    # Extended 1-hour loop version [output example]
+├── midnight-study-session-stems/       # Individual track stems [output examples]
 │   ├── drums.wav
 │   ├── bass.wav
 │   ├── rhodes-piano.wav
@@ -151,7 +153,7 @@ examples/tracks/midnight-study-session/
 │   ├── strings.wav
 │   ├── ambience.wav                    # Rain + vinyl crackle
 │   └── vinyl-crackle-only.wav
-└── midnight-study-session-metadata.json
+└── midnight-study-session-metadata.json [output example]
 ```
 
 ## 🎼 Chord Progression

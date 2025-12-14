@@ -165,18 +165,20 @@ Based on Grammy Meter™ analysis:
 - **RAM:** 64GB for sample libraries
 - **Storage:** 500GB orchestral sample libraries
 
-## 📁 File Downloads
+## 📁 File Structure (Output Example)
+
+**Note:** The file structure below represents example output files that would be generated. Actual audio files are not included in this repository.
 
 ```
 examples/tracks/rise-of-heroes/
-├── rise-of-heroes-master.wav           # Full quality master (24-bit/96kHz)
-├── rise-of-heroes-320.mp3              # High quality MP3 (320kbps)
-├── rise-of-heroes-trailer-edits/       # Pre-cut trailer versions
+├── rise-of-heroes-master.wav           # Full quality master (24-bit/96kHz) [output example]
+├── rise-of-heroes-320.mp3              # High quality MP3 (320kbps) [output example]
+├── rise-of-heroes-trailer-edits/       # Pre-cut trailer versions [output examples]
 │   ├── 30-second-cut.wav
 │   ├── 60-second-cut.wav
 │   ├── 90-second-cut.wav
 │   └── 120-second-cut.wav
-├── rise-of-heroes-stems/               # Individual orchestral sections
+├── rise-of-heroes-stems/               # Individual orchestral sections [output examples]
 │   ├── strings-section.wav
 │   ├── brass-section.wav
 │   ├── woodwinds-section.wav
@@ -186,9 +188,9 @@ examples/tracks/rise-of-heroes/
 │   ├── synth-bass.wav
 │   ├── sound-design.wav
 │   └── piano.wav
-├── rise-of-heroes-midi/                # MIDI files for editing
+├── rise-of-heroes-midi/                # MIDI files for editing [output example]
 │   └── full-score.mid
-└── rise-of-heroes-metadata.json
+└── rise-of-heroes-metadata.json [output example]
 ```
 
 ## 🎼 Musical Structure

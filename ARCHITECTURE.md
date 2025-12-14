@@ -506,7 +506,7 @@ GitHub Push
 
 **Roadmap:**
 
-**Q2 2025:**
+**Q2 2026:**
 - WebSocket real-time updates
 - GraphQL API alongside REST
 - Multi-region deployment (US, EU, Asia)

@@ -122,13 +122,15 @@ Based on Grammy Meter™ analysis:
 
 **Total Generation Time:** 65 seconds
 
-## 📁 File Downloads
+## 📁 File Structure (Output Example)
+
+**Note:** The file structure below represents example output files that would be generated. Actual audio files are not included in this repository.
 
 ```
 examples/tracks/sunset-paradise/
-├── sunset-paradise-master.wav          # Full quality master (24-bit/48kHz)
-├── sunset-paradise-320.mp3             # High quality MP3 (320kbps)
-├── sunset-paradise-stems/              # Individual track stems
+├── sunset-paradise-master.wav          # Full quality master (24-bit/48kHz) [output example]
+├── sunset-paradise-320.mp3             # High quality MP3 (320kbps) [output example]
+├── sunset-paradise-stems/              # Individual track stems [output examples]
 │   ├── drums.wav
 │   ├── bass.wav
 │   ├── guitars.wav
@@ -136,12 +138,15 @@ examples/tracks/sunset-paradise/
 │   ├── steel-drums.wav
 │   ├── vocals.wav
 │   └── fx.wav
-└── sunset-paradise-metadata.json       # Full track metadata
+└── sunset-paradise-metadata.json       # Full track metadata [output example]
 ```
 
-## 🎤 Lyrics Preview
+## 🎤 Full Lyrics
 
 ```
+[Intro - Instrumental]
+(Ocean waves, tropical percussion, rising synth pad)
+
 [Verse 1]
 Waves are crashing on the golden shore
 Feel the rhythm that we've been searching for
@@ -158,7 +163,39 @@ Feel the ocean's heartbeat, everything's alright
 Golden skies above, freedom in the air
 Sunset paradise, we haven't got a care
 
-... (Full lyrics included with track download)
+[Verse 2]
+Colors painting across the endless sky
+Let the moment take us, you and I
+Feel the sand between our toes tonight
+Everything just feels so right
+
+[Pre-Chorus]
+Close your eyes and feel the sun
+Our paradise has just begun
+
+[Chorus]
+Sunset paradise, dancing through the night
+Feel the ocean's heartbeat, everything's alright
+Golden skies above, freedom in the air
+Sunset paradise, we haven't got a care
+
+[Bridge]
+(Breakdown - minimal percussion, ambient pads)
+Let the world fade away
+We're living for today
+In this moment we'll stay
+In our sunset paradise
+
+[Final Chorus]
+Sunset paradise, dancing through the night
+Feel the ocean's heartbeat, everything's alright
+Golden skies above, freedom in the air
+Sunset paradise, we haven't got a care
+
+[Outro]
+(Fade out with ocean waves, steel drums, and synth pads)
+Sunset paradise... (we haven't got a care)
+Sunset paradise... (we'll always find it there)
 ```
 
 ---
