@@ -11,7 +11,17 @@
 
 [Demo](https://grammyengine.com) | [Documentation](https://docs.grammyengine.com) | [API Reference](https://api.grammyengine.com/docs)
 
+*Note: External URLs may be placeholders for services not yet live.*
+
 </div>
+
+---
+
+## ⚠️ Documentation Status
+
+- **Example Audio Files**: Audio file references in this documentation are example outputs. Actual audio files are not included in the repository.
+- **External Links**: Some links reference services that are planned but not yet live (grammyengine.com, Discord community, documentation site).
+- **Statistics**: Numbers are based on projections and internal estimates as of December 2025.
 
 ---
 
@@ -173,7 +183,7 @@ Matchering AI:
 ```python
 AI Hit Prediction Model:
   - Analyzes 50+ musical features
-  - Compares to 10,000+ hit songs database
+  - Compares to 10,000+ hit songs database (internal metrics)
   - Predicts commercial success probability
   - Identifies strengths and weaknesses
   - Generates actionable recommendations
@@ -348,7 +358,7 @@ Response:
     "Excellent mix balance overall",
     "High playlist potential for summer pop category"
   ],
-  "predicted_streams": "500K-1M in first 3 months"
+  "predicted_streams": "500K-1M in first 3 months (estimated)"
 }
 ```
 
@@ -985,7 +995,7 @@ Save your successful prompts! Grammy Engine Pro users can:
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
+We welcome contributions! Please see CONTRIBUTING.md (Coming Soon) for guidelines.
 
 ### **Development Setup**
 
@@ -1205,7 +1215,7 @@ This project is licensed under the **MIT License** - see [LICENSE](./LICENSE) fi
 - [ ] Mobile app (iOS/Android)
 - [ ] Spotify/Apple Music direct integration
 
-### **Q2 2025**
+### **Q1 2026**
 - [ ] Voice cloning marketplace
 - [ ] Collaborative features
 - [ ] Live performance mode
@@ -1245,7 +1255,7 @@ A: Electronic, pop, hip-hop, and cinematic music score highest (85-92/100). Rock
 A: Yes! Provide lyrics in your prompt or let the AI generate them. Voice cloning is available with a sample (10+ seconds recommended). Vocals work best for pop, R&B, and hip-hop genres.
 
 **Q: How accurate is the Grammy Meter™?**  
-A: Based on analysis of 10,000+ tracks, Grammy Meter™ has 85% accuracy predicting commercial success and 92% accuracy assessing production quality. It's a tool for guidance, not a guarantee.
+A: Based on analysis of 10,000+ tracks (internal metrics, as of December 2025), Grammy Meter™ has an estimated 85% accuracy predicting commercial success and 92% accuracy assessing production quality. It's a tool for guidance, not a guarantee.
 
 ### **Technical Questions**
 
@@ -1340,7 +1350,7 @@ A: Yes! Join our Discord to share your tracks, get feedback, and connect with ot
 ### **Stay Updated**
 
 - 🔔 **Newsletter:** [Subscribe](https://grammyengine.com/newsletter) - Monthly updates, tips, exclusive features
-- 📱 **Mobile App:** Coming Q2 2025 - iOS and Android
+- 📱 **Mobile App:** Coming Q1 2026 - iOS and Android
 - 🎮 **Discord Events:** Weekly listening parties, Q&A sessions, challenges
 
 ### **Contribute**
