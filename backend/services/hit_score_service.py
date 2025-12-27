@@ -1,5 +1,6 @@
 """
 Hit Score Service - AI-powered Grammy Meter and hit prediction
+Optimized for ARM architecture with lightweight processing
 """
 import numpy as np
 import librosa
@@ -9,6 +10,7 @@ import os
 import logging
 from typing import Dict, List
 from sklearn.preprocessing import StandardScaler
+from utils.config import is_lightweight_mode, get_audio_buffer_size
 
 logger = logging.getLogger(__name__)
 
@@ -91,37 +93,54 @@ async def calculate_grammy_score(audio_url: str, metadata: Dict) -> Dict:
 def extract_audio_features(audio_path: str) -> Dict:
     """
     Extract comprehensive audio features for analysis
+    Optimized for lightweight mode with reduced feature extraction
     """
     try:
-        # Load audio
-        y, sr = librosa.load(audio_path, sr=None)
+        # Load audio with optimized buffer size
+        buffer_size = get_audio_buffer_size()
+        
+        # In lightweight mode, use lower sample rate for faster processing
+        target_sr = 22050 if is_lightweight_mode() else None
+        
+        y, sr = librosa.load(audio_path, sr=target_sr)
         
         # Basic features
         duration = librosa.get_duration(y=y, sr=sr)
-        tempo, beats = librosa.beat.beat_track(y=y, sr=sr)
+        
+        # Tempo calculation with hop_length optimization
+        hop_length = 1024 if is_lightweight_mode() else 512
+        tempo, beats = librosa.beat.beat_track(y=y, sr=sr, hop_length=hop_length)
         
         # Spectral features
-        spectral_centroid = np.mean(librosa.feature.spectral_centroid(y=y, sr=sr))
-        spectral_rolloff = np.mean(librosa.feature.spectral_rolloff(y=y, sr=sr))
-        zero_crossing_rate = np.mean(librosa.feature.zero_crossing_rate(y))
+        spectral_centroid = np.mean(librosa.feature.spectral_centroid(y=y, sr=sr, hop_length=hop_length))
+        spectral_rolloff = np.mean(librosa.feature.spectral_rolloff(y=y, sr=sr, hop_length=hop_length))
+        zero_crossing_rate = np.mean(librosa.feature.zero_crossing_rate(y, hop_length=hop_length))
         
         # Energy and dynamics
-        rms = librosa.feature.rms(y=y)
+        rms = librosa.feature.rms(y=y, hop_length=hop_length)
         rms_mean = np.mean(rms)
         rms_std = np.std(rms)
         dynamic_range = 20 * np.log10(np.max(rms) / (np.min(rms) + 1e-10))
         
-        # Harmonic and percussive
-        y_harmonic, y_percussive = librosa.effects.hpss(y)
-        harmonic_ratio = np.mean(np.abs(y_harmonic)) / (np.mean(np.abs(y)) + 1e-10)
+        # In lightweight mode, skip expensive harmonic/percussive separation
+        if is_lightweight_mode():
+            # Estimate harmonic ratio from spectral features instead
+            harmonic_ratio = min(1.0, spectral_centroid / 5000.0)
+            logger.info("Lightweight mode: Using estimated harmonic ratio")
+        else:
+            # Full harmonic and percussive separation
+            y_harmonic, y_percussive = librosa.effects.hpss(y)
+            harmonic_ratio = np.mean(np.abs(y_harmonic)) / (np.mean(np.abs(y)) + 1e-10)
         
-        # Chroma and key
-        chroma = librosa.feature.chroma_stft(y=y, sr=sr)
-        chroma_mean = np.mean(chroma, axis=1)
-        
-        # MFCC for timbre
-        mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13)
-        mfcc_mean = np.mean(mfcc, axis=1)
+        # Skip MFCC and chroma in lightweight mode to save processing time
+        if not is_lightweight_mode():
+            # Chroma and key
+            chroma = librosa.feature.chroma_stft(y=y, sr=sr, hop_length=hop_length)
+            chroma_mean = np.mean(chroma, axis=1)
+            
+            # MFCC for timbre
+            mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13, hop_length=hop_length)
+            mfcc_mean = np.mean(mfcc, axis=1)
         
         # Loudness (simplified LUFS)
         loudness = 20 * np.log10(rms_mean + 1e-10) - 23

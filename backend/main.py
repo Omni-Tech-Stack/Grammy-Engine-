@@ -20,6 +20,7 @@ from api import (
     auth
 )
 from services.supabase_client import init_supabase
+from utils.config import log_configuration
 
 # Configure logging
 logging.basicConfig(
@@ -33,6 +34,9 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """Application lifespan events"""
     logger.info("🎵 Grammy Engine starting up...")
+    
+    # Log configuration
+    log_configuration()
     
     # Initialize Supabase connection
     try:
