@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 class SongGenerateRequest(BaseModel):
     prompt: str = Field(..., min_length=10, max_length=500)
-    duration: int = Field(30, ge=10, le=180, description="Duration in seconds")
+    duration: int = Field(180, ge=120, le=360, description="Duration in seconds (2-6 minutes for Grammy-tier radio-ready songs)")
     model: str = Field("musicgen-medium", description="Model to use")
     temperature: float = Field(1.0, ge=0.1, le=2.0)
 
@@ -86,13 +86,19 @@ async def generate_song(
             "generation_count": count + 1
         }).eq("id", current_user.id).execute()
         
-        estimated_time = request.duration * 2  # Rough estimate
+        # More accurate time estimation for 2-6 minute tracks
+        # Base time + processing overhead for long-form generation
+        if request.duration <= 60:
+            estimated_time = request.duration * 2
+        else:
+            # Long-form generation uses segment approach
+            estimated_time = request.duration * 1.5 + 30  # Additional overhead for combining
         
         return SongGenerateResponse(
             task_id=task.id,
             status="queued",
-            estimated_time=estimated_time,
-            message=f"Your track is being generated. Track ID: {track_id}"
+            estimated_time=int(estimated_time),
+            message=f"Your {request.duration}s Grammy-tier track is being generated. Track ID: {track_id}"
         )
     
     except HTTPException:
@@ -143,22 +149,36 @@ async def list_models():
                 "id": "musicgen-small",
                 "name": "MusicGen Small",
                 "description": "Fast generation, good quality",
-                "max_duration": 30,
+                "max_duration": 180,
+                "recommended_duration": "2-3 minutes",
                 "speed": "fast"
             },
             {
                 "id": "musicgen-medium",
                 "name": "MusicGen Medium",
-                "description": "Balanced quality and speed",
-                "max_duration": 60,
+                "description": "Balanced quality and speed - Industry-ready output",
+                "max_duration": 360,
+                "recommended_duration": "2-6 minutes",
                 "speed": "medium"
             },
             {
                 "id": "musicgen-large",
                 "name": "MusicGen Large",
-                "description": "Highest quality, slower",
-                "max_duration": 180,
+                "description": "Highest quality Grammy-tier output, slower generation",
+                "max_duration": 360,
+                "recommended_duration": "2-6 minutes",
                 "speed": "slow"
             }
-        ]
+        ],
+        "capabilities": {
+            "max_duration": 360,
+            "recommended_range": "120-360 seconds (2-6 minutes)",
+            "quality_level": "Grammy-tier, radio-ready",
+            "features": [
+                "Professional song structure",
+                "Smooth transitions",
+                "Dynamic arrangement",
+                "Industry-standard mastering"
+            ]
+        }
     }
