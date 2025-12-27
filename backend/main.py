@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import logging
 import time
+import os
 
 from api import (
     prompt_engine,
@@ -118,7 +119,6 @@ async def health_check():
     
     # Redis check (if configured)
     try:
-        import os
         redis_url = os.getenv("REDIS_URL")
         if redis_url:
             from redis import Redis
@@ -155,7 +155,6 @@ app.include_router(upload.router, prefix="/api/upload", tags=["Upload"])
 
 if __name__ == "__main__":
     import uvicorn
-    import os
     port = int(os.getenv("PORT", 8000))
     uvicorn.run(
         "main:app",
