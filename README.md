@@ -42,6 +42,8 @@ Output: Professional track ready for Spotify, Apple Music, TikTok
 | **Grammy Meter™** | Predicts hit potential (0-100) | Custom ONNX model |
 | **Distribution** | Auto-exports to DSPs + NFTs | DistroKid, Audius APIs |
 
+> 🎧 **Quality Assurance**: See [SOUND_QUALITY_ASSURANCE.md](./SOUND_QUALITY_ASSURANCE.md) for detailed information on how Grammy Engine ensures professional-grade sound quality using industry-standard AI models and mastering techniques.
+
 ### 🏆 **Grammy Meter™** - AI Hit Prediction
 
 Analyzes your track across 5 categories:
