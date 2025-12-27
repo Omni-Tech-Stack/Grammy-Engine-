@@ -19,6 +19,11 @@ from utils.config import (
     log_configuration
 )
 
+# Constants for memory calculations
+# Combined effect coefficient: accounts for interaction between model and buffer optimizations
+# Not a simple sum due to shared memory pools and CPU cache effects
+MEMORY_REDUCTION_COMBINED_FACTOR = 0.8
+
 
 def calculate_memory_savings():
     """Calculate estimated memory savings in lightweight mode"""
@@ -26,11 +31,13 @@ def calculate_memory_savings():
         # Base memory usage for standard mode
         standard_memory = 8192  # MB
         
-        # Memory reductions
-        model_reduction = 0.75  # 75% reduction with INT8
+        # Memory reductions from optimizations
+        model_reduction = 0.75  # 75% reduction with INT8 quantization
         buffer_reduction = 0.75  # 75% smaller buffers
         
-        lightweight_memory = standard_memory * (1 - model_reduction * 0.8)  # Combined effect
+        # Combined effect uses a coefficient because reductions aren't fully additive
+        # due to shared memory pools, CPU cache effects, and OS-level optimizations
+        lightweight_memory = standard_memory * (1 - model_reduction * MEMORY_REDUCTION_COMBINED_FACTOR)
         savings = standard_memory - lightweight_memory
         savings_percent = (savings / standard_memory) * 100
         

@@ -22,7 +22,8 @@ from utils.config import (
 logger = logging.getLogger(__name__)
 
 # Constants for model optimization
-LIGHTWEIGHT_TOKEN_REDUCTION_FACTOR = 0.8  # Reduce tokens by 20% in lightweight mode for faster generation
+# Retains 80% of tokens in lightweight mode (20% reduction) for faster generation
+LIGHTWEIGHT_TOKEN_REDUCTION_FACTOR = 0.8
 
 # Model cache
 _models = {}
@@ -70,8 +71,11 @@ def get_model(model_name: str = None):
                         model, {torch.nn.Linear}, dtype=torch.qint8
                     )
                     logger.info("Model quantized to INT8")
+                except (RuntimeError, AttributeError) as e:
+                    logger.warning(f"INT8 quantization failed, using FP32: {e}")
                 except Exception as e:
-                    logger.warning(f"Quantization failed, using FP32: {e}")
+                    logger.error(f"Unexpected error during quantization: {e}", exc_info=True)
+                    raise
             elif precision == 'float16':
                 model = model.half()
                 logger.info("Model converted to FP16")

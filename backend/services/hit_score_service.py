@@ -15,7 +15,10 @@ from utils.config import is_lightweight_mode, get_audio_buffer_size
 logger = logging.getLogger(__name__)
 
 # Constants for audio feature extraction
-HARMONIC_RATIO_SPECTRAL_THRESHOLD = 5000.0  # Hz - Spectral centroid threshold for estimating harmonic content
+# Spectral centroid threshold for estimating harmonic content in lightweight mode
+# Higher frequency content (above 5kHz) typically indicates less harmonic, more percussive content
+# This is a simplified approximation used when HPSS (harmonic-percussive separation) is skipped
+HARMONIC_RATIO_SPECTRAL_THRESHOLD = 5000.0  # Hz
 
 
 async def calculate_grammy_score(audio_url: str, metadata: Dict) -> Dict:
@@ -128,8 +131,10 @@ def extract_audio_features(audio_path: str) -> Dict:
         # In lightweight mode, skip expensive harmonic/percussive separation
         if is_lightweight_mode():
             # Estimate harmonic ratio from spectral features instead
+            # This is an approximation: lower spectral centroid typically means more harmonic content
+            # Note: This may be less accurate than full HPSS but saves significant processing time
             harmonic_ratio = min(1.0, spectral_centroid / HARMONIC_RATIO_SPECTRAL_THRESHOLD)
-            logger.info("Lightweight mode: Using estimated harmonic ratio")
+            logger.info("Lightweight mode: Using estimated harmonic ratio from spectral centroid")
         else:
             # Full harmonic and percussive separation
             y_harmonic, y_percussive = librosa.effects.hpss(y)

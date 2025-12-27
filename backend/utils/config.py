@@ -11,9 +11,17 @@ logger = logging.getLogger(__name__)
 def is_arm_architecture():
     """
     Detect if running on ARM architecture
+    
+    Checks for common ARM identifiers in platform.machine():
+    - arm, armv7l, armv8l (32-bit ARM)
+    - aarch64, arm64 (64-bit ARM)
+    
+    Note: This is a heuristic check. For production use with emulation
+    environments, consider additional validation.
     """
     machine = platform.machine().lower()
-    return 'arm' in machine or 'aarch64' in machine
+    arm_identifiers = ['arm', 'aarch64', 'arm64', 'armv7', 'armv8']
+    return any(identifier in machine for identifier in arm_identifiers)
 
 
 def is_lightweight_mode():
