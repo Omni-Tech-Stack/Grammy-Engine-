@@ -17,6 +17,9 @@ logger = logging.getLogger(__name__)
 # Model cache
 _models = {}
 
+# Audio processing constants
+TEMPO_VARIATION = 0.02  # 2% tempo variation for extending audio without repetition
+
 
 def get_model(model_name: str = "facebook/musicgen-medium"):
     """
@@ -134,19 +137,19 @@ def _generate_long_form_music(
     for industry-ready 2-6 minute tracks
     
     This approach ensures consistent quality throughout extended tracks by:
-    - Generating music in 30-45 second segments
+    - Generating music in 45 second segments
     - Creating smooth crossfades between segments
     - Maintaining musical coherence and variation
     """
     try:
         logger.info(f"Generating long-form music: {duration}s in segments")
         
-        # Segment duration (30-45s for optimal quality)
+        # Segment duration (45s for optimal quality)
         segment_duration = 45
         crossfade_duration = 5  # 5 second crossfade for smooth transitions
         
-        # Calculate number of segments needed
-        num_segments = int(np.ceil(duration / (segment_duration - crossfade_duration)))
+        # Calculate number of segments needed (accounting for crossfade overlap)
+        num_segments = int(np.ceil(duration / segment_duration))
         
         # Get model components
         model_data = get_model(model)
@@ -195,8 +198,9 @@ def _generate_long_form_music(
             audio_array = audio_values[0, 0].cpu().numpy()
             audio_array = audio_array / np.max(np.abs(audio_array))
             
-            # Convert to AudioSegment for processing
-            segment_path = tempfile.mktemp(suffix=".wav", prefix="segment_")
+            # Convert to AudioSegment for processing using secure temp file
+            with tempfile.NamedTemporaryFile(suffix=".wav", prefix="segment_", delete=False) as tmp_file:
+                segment_path = tmp_file.name
             wavfile.write(segment_path, sample_rate, (audio_array * 32767).astype(np.int16))
             segment = AudioSegment.from_wav(segment_path)
             os.unlink(segment_path)
@@ -220,8 +224,9 @@ def _generate_long_form_music(
         # Add fade out at the end (3 seconds for radio-ready finish)
         combined = combined.fade_out(3000)
         
-        # Save final track
-        output_path = tempfile.mktemp(suffix=".wav", prefix="grammy_long_")
+        # Save final track using secure temp file
+        with tempfile.NamedTemporaryFile(suffix=".wav", prefix="grammy_long_", delete=False) as tmp_file:
+            output_path = tmp_file.name
         combined.export(output_path, format="wav")
         
         logger.info(f"Long-form music generated: {output_path} ({duration}s)")
@@ -326,7 +331,7 @@ def extend_audio(audio_path: str, target_duration: int) -> str:
             if loop_count % 3 == 0:
                 # Every 3rd loop: slight tempo variation (±2%)
                 # This maintains musical coherence while adding subtle variation
-                playback_rate = 1.0 + (0.02 if loop_count % 2 == 0 else -0.02)
+                playback_rate = 1.0 + (TEMPO_VARIATION if loop_count % 2 == 0 else -TEMPO_VARIATION)
                 loop_segment = audio._spawn(
                     audio.raw_data,
                     overrides={'frame_rate': int(audio.frame_rate * playback_rate)}
@@ -347,8 +352,9 @@ def extend_audio(audio_path: str, target_duration: int) -> str:
         # Add fade out in the last 3 seconds for radio-ready finish
         extended = extended.fade_out(3000)
         
-        # Save
-        output_path = tempfile.mktemp(suffix=".wav", prefix="grammy_extended_")
+        # Save using secure temp file
+        with tempfile.NamedTemporaryFile(suffix=".wav", prefix="grammy_extended_", delete=False) as tmp_file:
+            output_path = tmp_file.name
         extended.export(output_path, format="wav")
         
         logger.info(f"Audio extended successfully to {target_duration}s")

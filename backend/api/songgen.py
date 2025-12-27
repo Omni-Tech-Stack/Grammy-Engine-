@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 class SongGenerateRequest(BaseModel):
     prompt: str = Field(..., min_length=10, max_length=500)
-    duration: int = Field(180, ge=120, le=360, description="Duration in seconds (2-6 minutes for Grammy-tier radio-ready songs)")
+    duration: int = Field(180, ge=60, le=360, description="Duration in seconds (1-6 minutes for Grammy-tier radio-ready songs)")
     model: str = Field("musicgen-medium", description="Model to use")
     temperature: float = Field(1.0, ge=0.1, le=2.0)
 

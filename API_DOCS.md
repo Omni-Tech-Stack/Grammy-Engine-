@@ -236,7 +236,7 @@ Authorization: Bearer {access_token}
 
 **Parameters:**
 - `prompt` (required): Music description
-- `duration` (optional): Length in seconds (120-360, default: 180) - Industry-ready 2-6 minute tracks
+- `duration` (optional): Length in seconds (60-360, default: 180) - Industry-ready 1-6 minute tracks
 - `model` (optional): `musicgen-small`, `musicgen-medium`, `musicgen-large` (default: `medium`)
 - `quality` (optional): `draft`, `standard`, `high` (default: `standard`)
 - `temperature` (optional): Creativity level 0.0-1.5 (default: 1.0)
