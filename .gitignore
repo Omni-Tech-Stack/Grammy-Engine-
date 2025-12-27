@@ -116,3 +116,7 @@ Thumbs.db
 secrets.yaml
 credentials.json
 serviceAccountKey.json
+
+# Railway
+.railway/
+railway.toml

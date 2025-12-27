@@ -123,6 +123,36 @@ docker-compose up -d
 
 ---
 
+## 🚀 Deploy to Railway
+
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template)
+
+### **One-Click Deployment**
+
+1. Click the "Deploy on Railway" button above
+2. Connect your GitHub account
+3. Configure environment variables (see `.env.railway`)
+4. Deploy and get your live URL in minutes!
+
+### **What You Get**
+
+- **Auto-configured services**: Frontend, Backend, PostgreSQL, Redis
+- **Automatic HTTPS**: SSL certificates included
+- **Continuous deployment**: Auto-deploys from GitHub
+- **Built-in monitoring**: Logs, metrics, and health checks
+
+### **Detailed Instructions**
+
+See [RAILWAY_DEPLOYMENT.md](./RAILWAY_DEPLOYMENT.md) for:
+- Step-by-step setup guide
+- Environment variable configuration
+- Database & Redis setup
+- Custom domain configuration
+- Troubleshooting tips
+- Cost estimates
+
+---
+
 ## 📁 Project Structure
 
 ```
