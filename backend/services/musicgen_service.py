@@ -106,8 +106,9 @@ def generate_music(
         # Convert to numpy
         audio_array = audio_values[0, 0].cpu().numpy()
         
-        # Save to temporary file
-        output_path = tempfile.mktemp(suffix=".wav", prefix="grammy_gen_")
+        # Save to temporary file using secure temp file
+        with tempfile.NamedTemporaryFile(suffix=".wav", prefix="grammy_gen_", delete=False) as tmp_file:
+            output_path = tmp_file.name
         
         # Normalize audio
         audio_array = audio_array / np.max(np.abs(audio_array))
@@ -268,22 +269,26 @@ def generate_stems(audio_path: str) -> Dict[str, str]:
         
         # Low-pass filter for bass (< 200 Hz)
         bass = librosa.effects.split(audio_mono, top_db=20)
-        bass_path = tempfile.mktemp(suffix=".wav", prefix="stem_bass_")
+        with tempfile.NamedTemporaryFile(suffix=".wav", prefix="stem_bass_", delete=False) as tmp_file:
+            bass_path = tmp_file.name
         wavfile.write(bass_path, sr, audio_mono.astype(np.float32))
         stems["bass"] = bass_path
         
         # Band-pass for mids/melody (200-8000 Hz)
-        melody_path = tempfile.mktemp(suffix=".wav", prefix="stem_melody_")
+        with tempfile.NamedTemporaryFile(suffix=".wav", prefix="stem_melody_", delete=False) as tmp_file:
+            melody_path = tmp_file.name
         wavfile.write(melody_path, sr, audio_mono.astype(np.float32))
         stems["melody"] = melody_path
         
         # High-pass for percussion/cymbals (> 8000 Hz)
-        drums_path = tempfile.mktemp(suffix=".wav", prefix="stem_drums_")
+        with tempfile.NamedTemporaryFile(suffix=".wav", prefix="stem_drums_", delete=False) as tmp_file:
+            drums_path = tmp_file.name
         wavfile.write(drums_path, sr, audio_mono.astype(np.float32))
         stems["drums"] = drums_path
         
         # Full mix as "other"
-        other_path = tempfile.mktemp(suffix=".wav", prefix="stem_other_")
+        with tempfile.NamedTemporaryFile(suffix=".wav", prefix="stem_other_", delete=False) as tmp_file:
+            other_path = tmp_file.name
         wavfile.write(other_path, sr, audio_mono.astype(np.float32))
         stems["other"] = other_path
         
