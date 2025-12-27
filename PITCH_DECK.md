@@ -845,7 +845,7 @@ After Jan 15, we're either:
 - Mobile apps (iOS + Android)
 - Spotify/Apple Music direct integration
 
-**Q2 2025: Marketplace**
+**Q2 2026: Marketplace**
 - Voice model trading platform
 - Template/preset marketplace
 - Collaborative features (split royalties)
