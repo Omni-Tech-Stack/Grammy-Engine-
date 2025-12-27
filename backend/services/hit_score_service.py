@@ -14,6 +14,9 @@ from utils.config import is_lightweight_mode, get_audio_buffer_size
 
 logger = logging.getLogger(__name__)
 
+# Constants for audio feature extraction
+HARMONIC_RATIO_SPECTRAL_THRESHOLD = 5000.0  # Hz - Spectral centroid threshold for estimating harmonic content
+
 
 async def calculate_grammy_score(audio_url: str, metadata: Dict) -> Dict:
     """
@@ -125,7 +128,7 @@ def extract_audio_features(audio_path: str) -> Dict:
         # In lightweight mode, skip expensive harmonic/percussive separation
         if is_lightweight_mode():
             # Estimate harmonic ratio from spectral features instead
-            harmonic_ratio = min(1.0, spectral_centroid / 5000.0)
+            harmonic_ratio = min(1.0, spectral_centroid / HARMONIC_RATIO_SPECTRAL_THRESHOLD)
             logger.info("Lightweight mode: Using estimated harmonic ratio")
         else:
             # Full harmonic and percussive separation

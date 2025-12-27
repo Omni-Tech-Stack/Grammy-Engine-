@@ -21,6 +21,9 @@ from utils.config import (
 
 logger = logging.getLogger(__name__)
 
+# Constants for model optimization
+LIGHTWEIGHT_TOKEN_REDUCTION_FACTOR = 0.8  # Reduce tokens by 20% in lightweight mode for faster generation
+
 # Model cache
 _models = {}
 
@@ -77,8 +80,14 @@ def get_model(model_name: str = None):
         
         # Enable inference mode optimizations
         model.eval()
-        if hasattr(torch, 'inference_mode'):
-            model = torch.jit.optimize_for_inference(model) if not is_lightweight_mode() else model
+        
+        # Apply JIT optimization only in standard mode
+        if hasattr(torch, 'jit') and not is_lightweight_mode():
+            try:
+                model = torch.jit.optimize_for_inference(model)
+                logger.info("JIT optimization applied")
+            except Exception as e:
+                logger.warning(f"JIT optimization failed, using standard model: {e}")
         
         _models[model_name] = {"processor": processor, "model": model, "device": device}
         
@@ -135,7 +144,7 @@ def generate_music(
         
         # Reduce tokens in lightweight mode for faster generation
         if is_lightweight_mode():
-            max_new_tokens = int(max_new_tokens * 0.8)  # Slightly shorter for speed
+            max_new_tokens = int(max_new_tokens * LIGHTWEIGHT_TOKEN_REDUCTION_FACTOR)
         
         # Generate audio with memory optimization
         with torch.no_grad():
