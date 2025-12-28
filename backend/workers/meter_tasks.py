@@ -1,23 +1,13 @@
 """
 Celery tasks for Grammy Meter analysis and hit prediction
 """
-from celery import Task
 from workers.celery_app import celery_app
+from workers.base import CallbackTask
 from services.hit_score_service import calculate_grammy_score, analyze_trends
 from services.supabase_client import supabase
 import logging
 
 logger = logging.getLogger(__name__)
-
-
-class CallbackTask(Task):
-    """Base task with callbacks"""
-    
-    def on_success(self, retval, task_id, args, kwargs):
-        logger.info(f"Task {task_id} completed successfully")
-    
-    def on_failure(self, exc, task_id, args, kwargs, einfo):
-        logger.error(f"Task {task_id} failed: {exc}")
 
 
 @celery_app.task(bind=True, base=CallbackTask, name="workers.meter_tasks.analyze_hit_potential_task")
