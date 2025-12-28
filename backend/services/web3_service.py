@@ -13,7 +13,7 @@ import json
 logger = logging.getLogger(__name__)
 
 # Configuration
-RPC_URL = os.getenv("WEB3_RPC_URL", "https://mainnet.infura.io/v3/YOUR-PROJECT-ID")
+RPC_URL = os.getenv("WEB3_RPC_URL", "")
 CHAIN_ID = int(os.getenv("WEB3_CHAIN_ID", "1"))  # 1 = Ethereum Mainnet, 137 = Polygon
 PRIVATE_KEY = os.getenv("WEB3_PRIVATE_KEY", "")
 CONTRACT_ADDRESS = os.getenv("NFT_CONTRACT_ADDRESS", "")
