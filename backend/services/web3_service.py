@@ -364,9 +364,6 @@ def mint_nft(
             "owner": checksummed_owner,
             "metadata_uri": metadata_uri,
             # Fields that will be populated once the transaction is mined
-            "token_id": None,
-            "block_number": None,
-            "gas_used": None,
             "token_id": None,  # Will be available after transaction is mined
             "block_number": None,  # Will be available after transaction is mined
             "gas_used": None,  # Will be available after transaction is mined
