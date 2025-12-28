@@ -4,9 +4,11 @@ Handles on-chain operations including NFT minting, ownership, and marketplace
 """
 import os
 import logging
+import time
 from typing import Optional, Dict, Any
 from web3 import Web3
 from web3.middleware import geth_poa_middleware
+from web3.exceptions import TransactionNotFound
 from eth_account import Account
 import json
 
@@ -18,9 +20,18 @@ CHAIN_ID = int(os.getenv("WEB3_CHAIN_ID", "1"))  # 1 = Ethereum Mainnet, 137 = P
 PRIVATE_KEY = os.getenv("WEB3_PRIVATE_KEY", "")
 CONTRACT_ADDRESS = os.getenv("NFT_CONTRACT_ADDRESS", "")
 
+# Retry configuration
+MAX_RETRIES = int(os.getenv("WEB3_MAX_RETRIES", "3"))
+INITIAL_RETRY_DELAY = float(os.getenv("WEB3_INITIAL_RETRY_DELAY", "2.0"))  # seconds
+MAX_RETRY_DELAY = float(os.getenv("WEB3_MAX_RETRY_DELAY", "30.0"))  # seconds
+
 # Global Web3 instance
 w3: Optional[Web3] = None
 account: Optional[Account] = None
+
+# Nonce tracking (in-memory cache to avoid gaps)
+_nonce_cache: Dict[str, int] = {}
+_nonce_lock = None  # For thread safety in production, use threading.Lock()
 
 
 def init_web3() -> Web3:
@@ -69,6 +80,106 @@ def get_web3() -> Web3:
         w3 = init_web3()
     
     return w3
+
+
+def get_next_nonce(address: str, web3: Web3) -> int:
+    """
+    Get next nonce for address with local caching to prevent gaps
+    
+    Args:
+        address: Ethereum address
+        web3: Web3 instance
+    
+    Returns:
+        Next nonce to use
+    """
+    global _nonce_cache
+    
+    # Get on-chain nonce
+    onchain_nonce = web3.eth.get_transaction_count(address, 'pending')
+    
+    # Check cached nonce
+    cached_nonce = _nonce_cache.get(address, 0)
+    
+    # Use the higher of cached or on-chain nonce
+    next_nonce = max(onchain_nonce, cached_nonce)
+    
+    # Update cache
+    _nonce_cache[address] = next_nonce + 1
+    
+    logger.debug(f"Nonce for {address}: on-chain={onchain_nonce}, cached={cached_nonce}, using={next_nonce}")
+    
+    return next_nonce
+
+
+def reset_nonce_cache(address: str):
+    """
+    Reset nonce cache for an address (call after transaction failure)
+    
+    Args:
+        address: Ethereum address
+    """
+    global _nonce_cache
+    
+    if address in _nonce_cache:
+        del _nonce_cache[address]
+        logger.debug(f"Reset nonce cache for {address}")
+
+
+def retry_with_exponential_backoff(func, max_retries: int = MAX_RETRIES, 
+                                   initial_delay: float = INITIAL_RETRY_DELAY,
+                                   max_delay: float = MAX_RETRY_DELAY):
+    """
+    Retry a function with exponential backoff
+    
+    Args:
+        func: Function to retry (should be a callable)
+        max_retries: Maximum number of retry attempts
+        initial_delay: Initial delay in seconds
+        max_delay: Maximum delay between retries in seconds
+    
+    Returns:
+        Result from successful function call
+    
+    Raises:
+        Last exception if all retries fail
+    """
+    delay = initial_delay
+    last_exception = None
+    
+    for attempt in range(max_retries + 1):
+        try:
+            return func()
+        except Exception as e:
+            last_exception = e
+            
+            if attempt < max_retries:
+                # Check if this is a retryable error
+                error_str = str(e).lower()
+                retryable_errors = [
+                    'connection',
+                    'timeout',
+                    'network',
+                    'nonce too low',
+                    'replacement transaction underpriced',
+                    'already known'
+                ]
+                
+                is_retryable = any(err in error_str for err in retryable_errors)
+                
+                if is_retryable:
+                    logger.warning(f"Attempt {attempt + 1}/{max_retries + 1} failed: {e}. Retrying in {delay}s...")
+                    time.sleep(delay)
+                    # Exponential backoff with jitter
+                    delay = min(delay * 2, max_delay)
+                else:
+                    # Non-retryable error, fail immediately
+                    logger.error(f"Non-retryable error: {e}")
+                    raise
+            else:
+                logger.error(f"All {max_retries + 1} attempts failed")
+    
+    raise last_exception
 
 
 def get_contract(contract_address: str = None, abi: list = None):
@@ -129,7 +240,7 @@ def mint_nft(
     royalty_percentage: int = 10
 ) -> Dict[str, Any]:
     """
-    Mint NFT for a music track on-chain (synchronous operation)
+    Mint NFT for a music track on-chain with retry logic and nonce management
     
     Args:
         track_id: Unique track identifier
@@ -140,7 +251,8 @@ def mint_nft(
     Returns:
         Transaction receipt and token ID
     """
-    try:
+    def _execute_mint():
+        """Internal function for minting with retry support"""
         logger.info(f"Minting NFT for track {track_id}")
         
         web3 = get_web3()
@@ -155,20 +267,20 @@ def mint_nft(
         if not Web3.is_address(owner_address):
             raise ValueError(f"Invalid owner address: {owner_address}")
         
-        owner_address = Web3.to_checksum_address(owner_address)
+        checksummed_owner = Web3.to_checksum_address(owner_address)
         
         # Get contract
         contract = get_contract()
         
-        # Prepare transaction
-        nonce = web3.eth.get_transaction_count(account.address)
+        # Get next nonce with caching to prevent gaps
+        nonce = get_next_nonce(account.address, web3)
         
         # Convert royalty percentage to basis points (10000 = 100%)
         royalty_bp = royalty_percentage * 100
         
         # Estimate gas for the transaction
         mint_function = contract.functions.mintTrack(
-            owner_address,
+            checksummed_owner,
             track_id,
             metadata_uri,
             royalty_bp
@@ -222,21 +334,27 @@ def mint_nft(
         
         # Return immediately with transaction hash (don't wait for confirmation)
         # Caller should poll for transaction status separately to avoid blocking
-        result = {
+        return {
             "success": True,
             "transaction_hash": tx_hash.hex(),
             "status": "pending",
-            "owner": owner_address,
+            "nonce": nonce,
+            "owner": checksummed_owner,
             "metadata_uri": metadata_uri,
             "message": "Transaction submitted. Poll transaction status separately."
         }
-        
-        logger.info(f"NFT minted successfully: Token ID {token_id}")
-        
+    
+    try:
+        # Execute mint with retry logic
+        result = retry_with_exponential_backoff(_execute_mint)
+        logger.info(f"NFT minted successfully for track {track_id}")
         return result
     
     except Exception as e:
-        logger.error(f"NFT minting failed: {e}")
+        # Reset nonce cache on failure to resync with blockchain
+        if account:
+            reset_nonce_cache(account.address)
+        logger.error(f"NFT minting failed after retries: {e}")
         raise
 
 
@@ -246,7 +364,7 @@ def transfer_nft(
     to_address: str
 ) -> Dict[str, Any]:
     """
-    Transfer NFT ownership on-chain (synchronous operation)
+    Transfer NFT ownership on-chain with retry logic and nonce management
     
     Args:
         token_id: NFT token ID
@@ -256,7 +374,8 @@ def transfer_nft(
     Returns:
         Transaction receipt
     """
-    try:
+    def _execute_transfer():
+        """Internal function for transfer with retry support"""
         logger.info(f"Transferring NFT {token_id} from {from_address} to {to_address}")
         
         web3 = get_web3()
@@ -268,26 +387,59 @@ def transfer_nft(
         if not Web3.is_address(from_address) or not Web3.is_address(to_address):
             raise ValueError("Invalid Ethereum address")
         
-        from_address = Web3.to_checksum_address(from_address)
-        to_address = Web3.to_checksum_address(to_address)
+        checksummed_from = Web3.to_checksum_address(from_address)
+        checksummed_to = Web3.to_checksum_address(to_address)
         
         # Get contract
         contract = get_contract()
         
-        # Prepare transaction
-        nonce = web3.eth.get_transaction_count(account.address)
+        # Get next nonce with caching
+        nonce = get_next_nonce(account.address, web3)
+        
+        # Build transfer function
+        transfer_function = contract.functions.transferFrom(
+            checksummed_from,
+            checksummed_to,
+            token_id
+        )
+        
+        # Build transaction parameters
+        tx_params = {
+            'from': account.address,
+            'chainId': CHAIN_ID,
+            'nonce': nonce,
+        }
+        
+        # Estimate gas with safety buffer
+        try:
+            estimated_gas = transfer_function.estimate_gas(tx_params)
+            gas_limit = int(estimated_gas * 1.2)  # 20% safety buffer
+        except Exception as e:
+            logger.warning(f"Gas estimation failed, using default: {e}")
+            gas_limit = 200000  # Fallback to conservative limit
+        
+        tx_params['gas'] = gas_limit
+        
+        # Use EIP-1559 fee mechanism if supported
+        try:
+            latest_block = web3.eth.get_block('latest')
+            if 'baseFeePerGas' in latest_block:
+                # EIP-1559 transaction
+                max_priority_fee = web3.eth.max_priority_fee
+                base_fee = latest_block['baseFeePerGas']
+                max_fee = base_fee * 2 + max_priority_fee
+                
+                tx_params['maxFeePerGas'] = max_fee
+                tx_params['maxPriorityFeePerGas'] = max_priority_fee
+            else:
+                # Legacy transaction
+                tx_params['gasPrice'] = web3.eth.gas_price
+        except Exception as e:
+            logger.warning(f"Failed to use EIP-1559, falling back to legacy: {e}")
+            tx_params['gasPrice'] = web3.eth.gas_price
         
         # Build transfer transaction
-        transfer_tx = contract.functions.transferFrom(
-            from_address,
-            to_address,
-            token_id
-        ).build_transaction({
-            'chainId': CHAIN_ID,
-            'gas': 200000,
-            'gasPrice': web3.eth.gas_price,
-            'nonce': nonce,
-        })
+        transfer_tx = transfer_function.build_transaction(tx_params)
         
         # Sign and send
         signed_tx = web3.eth.account.sign_transaction(transfer_tx, PRIVATE_KEY)
@@ -295,22 +447,25 @@ def transfer_nft(
         
         logger.info(f"Transfer transaction sent: {tx_hash.hex()}")
         
-        # Wait for receipt
-        tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash, timeout=120)
-        
-        result = {
+        return {
             "success": True,
             "transaction_hash": tx_hash.hex(),
-            "block_number": tx_receipt['blockNumber'],
-            "gas_used": tx_receipt['gasUsed']
+            "status": "pending",
+            "nonce": nonce,
+            "message": "Transaction submitted. Poll transaction status separately."
         }
-        
-        logger.info(f"NFT transferred successfully")
-        
+    
+    try:
+        # Execute transfer with retry logic
+        result = retry_with_exponential_backoff(_execute_transfer)
+        logger.info(f"NFT {token_id} transferred successfully")
         return result
     
     except Exception as e:
-        logger.error(f"NFT transfer failed: {e}")
+        # Reset nonce cache on failure to resync with blockchain
+        if account:
+            reset_nonce_cache(account.address)
+        logger.error(f"NFT transfer failed after retries: {e}")
         raise
 
 
