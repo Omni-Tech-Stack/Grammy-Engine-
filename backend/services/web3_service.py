@@ -17,6 +17,14 @@ logger = logging.getLogger(__name__)
 # Configuration
 RPC_URL = os.getenv("WEB3_RPC_URL", "")
 CHAIN_ID = int(os.getenv("WEB3_CHAIN_ID", "1"))  # 1 = Ethereum Mainnet, 137 = Polygon
+
+# SECURITY WARNING: Private key is loaded at module initialization
+# For production deployments, use secure key management solutions:
+# - AWS KMS (Key Management Service)
+# - HashiCorp Vault
+# - Azure Key Vault
+# - Google Cloud KMS
+# Never commit private keys to version control or store in plain text
 PRIVATE_KEY = os.getenv("WEB3_PRIVATE_KEY", "")
 CONTRACT_ADDRESS = os.getenv("NFT_CONTRACT_ADDRESS", "")
 
@@ -70,9 +78,12 @@ def init_web3() -> Web3:
         raise
 
 
-def get_web3() -> Web3:
+def get_web3() -> Optional[Web3]:
     """
     Get Web3 instance
+    
+    Returns:
+        Web3 instance or None if not configured
     """
     global w3
     
@@ -366,9 +377,22 @@ def transfer_nft(
     """
     Transfer NFT ownership on-chain with retry logic and nonce management
     
+    **IMPORTANT LIMITATION**: This function uses the service account to sign transactions.
+    For NFT transfers, the transaction MUST be signed by the current owner (from_address)
+    or an approved operator. The service account likely does NOT have approval to transfer
+    NFTs it doesn't own.
+    
+    **For Production**: Consider alternative approaches:
+    1. Users sign transactions client-side with their own wallets (MetaMask, WalletConnect)
+    2. Implement a delegation/approval system where users pre-approve the service account
+    3. Use a multisig wallet or smart contract-based custody solution
+    
+    This function will only work for NFTs owned by the service account or where the
+    service account has been explicitly approved as an operator.
+    
     Args:
         token_id: NFT token ID
-        from_address: Current owner address
+        from_address: Current owner address (must match actual on-chain owner)
         to_address: New owner address
     
     Returns:

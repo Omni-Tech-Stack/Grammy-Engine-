@@ -3,7 +3,7 @@ Blockchain API - On-chain operations for Grammy Engine
 Handles NFT minting, transfers, and marketplace operations
 """
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 import logging
 import os
@@ -29,6 +29,20 @@ class MintNFTRequest(BaseModel):
     owner_address: str = Field(..., description="Wallet address of track owner")
     metadata_uri: str = Field(..., description="IPFS/HTTP URI to track metadata")
     royalty_percentage: int = Field(10, ge=0, le=100, description="Royalty percentage (0-100)")
+    
+    @field_validator('owner_address')
+    @classmethod
+    def validate_ethereum_address(cls, v: str) -> str:
+        """Validate Ethereum address format"""
+        if not v.startswith('0x'):
+            raise ValueError('Address must start with 0x')
+        if len(v) != 42:
+            raise ValueError('Address must be 42 characters (0x + 40 hex characters)')
+        try:
+            int(v[2:], 16)  # Verify it's valid hex
+        except ValueError:
+            raise ValueError('Address must contain only hexadecimal characters')
+        return v.lower()
 
 
 class MintNFTResponse(BaseModel):
@@ -46,6 +60,20 @@ class TransferNFTRequest(BaseModel):
     token_id: int = Field(..., description="NFT token ID to transfer")
     from_address: str = Field(..., description="Current owner address")
     to_address: str = Field(..., description="New owner address")
+    
+    @field_validator('from_address', 'to_address')
+    @classmethod
+    def validate_ethereum_address(cls, v: str) -> str:
+        """Validate Ethereum address format"""
+        if not v.startswith('0x'):
+            raise ValueError('Address must start with 0x')
+        if len(v) != 42:
+            raise ValueError('Address must be 42 characters (0x + 40 hex characters)')
+        try:
+            int(v[2:], 16)  # Verify it's valid hex
+        except ValueError:
+            raise ValueError('Address must contain only hexadecimal characters')
+        return v.lower()
 
 
 class TransferNFTResponse(BaseModel):
@@ -170,10 +198,19 @@ async def transfer_track_nft(request: TransferNFTRequest):
     """
     Transfer NFT ownership on-chain
     
-    **IMPORTANT: This endpoint requires authentication and authorization.**
-    Only the current NFT owner should be able to transfer ownership.
+    **CRITICAL LIMITATION**: This endpoint uses a service account to sign transactions.
+    NFT transfers require the transaction to be signed by the current owner or an approved
+    operator. This endpoint will FAIL unless:
+    1. The service account owns the NFT, OR
+    2. The service account has been approved as an operator by the current owner
     
-    Transfers ownership of a track NFT from one wallet to another.
+    **Recommended Production Implementation**:
+    - Users should sign transactions client-side using their own wallets (MetaMask, WalletConnect)
+    - Implement a delegation system where users approve the service account first
+    - Use a custody solution or multisig wallet for managed transfers
+    
+    **IMPORTANT: This endpoint requires authentication and authorization.**
+    Only the current NFT owner should be able to initiate transfers.
     
     **On-chain operation** - requires blockchain connection and authentication
     
@@ -294,6 +331,21 @@ async def get_balance(address: str):
     **On-chain read operation** - requires blockchain connection
     """
     try:
+        # Validate address format
+        if not address.startswith('0x') or len(address) != 42:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid Ethereum address format. Must be 42 characters starting with 0x"
+            )
+        
+        try:
+            int(address[2:], 16)  # Verify it's valid hex
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid Ethereum address. Must contain only hexadecimal characters"
+            )
+        
         # Check if blockchain is enabled
         if not is_blockchain_enabled():
             raise HTTPException(
