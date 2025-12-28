@@ -17,7 +17,8 @@ from api import (
     mixmaster,
     grammy_meter,
     upload,
-    auth
+    auth,
+    blockchain
 )
 from services.supabase_client import init_supabase
 from utils.config import log_configuration
@@ -155,6 +156,7 @@ app.include_router(vocalgen.router, prefix="/api/vocalgen", tags=["Vocal Generat
 app.include_router(mixmaster.router, prefix="/api/mixmaster", tags=["Mix & Master"])
 app.include_router(grammy_meter.router, prefix="/api/meter", tags=["Grammy Meter"])
 app.include_router(upload.router, prefix="/api/upload", tags=["Upload"])
+app.include_router(blockchain.router, prefix="/api/blockchain", tags=["Blockchain & NFTs"])
 
 
 if __name__ == "__main__":
