@@ -49,8 +49,8 @@ class MintNFTResponse(BaseModel):
     success: bool
     transaction_hash: str
     token_id: Optional[int]
-    block_number: int
-    gas_used: int
+    block_number: Optional[int]  # None for pending transactions
+    gas_used: Optional[int]  # None for pending transactions
     owner: str
     metadata_uri: str
     message: str
@@ -79,8 +79,8 @@ class TransferNFTRequest(BaseModel):
 class TransferNFTResponse(BaseModel):
     success: bool
     transaction_hash: str
-    block_number: int
-    gas_used: int
+    block_number: Optional[int]  # None for pending transactions
+    gas_used: Optional[int]  # None for pending transactions
     message: str
 
 
@@ -179,8 +179,8 @@ async def mint_track_nft(request: MintNFTRequest):
             success=True,
             transaction_hash=result["transaction_hash"],
             token_id=result.get("token_id"),
-            block_number=result.get("block_number", 0),
-            gas_used=result.get("gas_used", 0),
+            block_number=result.get("block_number"),
+            gas_used=result.get("gas_used"),
             owner=result["owner"],
             metadata_uri=result["metadata_uri"],
             message=result.get("message", "NFT minted successfully")
@@ -257,8 +257,8 @@ async def transfer_track_nft(request: TransferNFTRequest):
         return TransferNFTResponse(
             success=True,
             transaction_hash=result["transaction_hash"],
-            block_number=result["block_number"],
-            gas_used=result["gas_used"],
+            block_number=result.get("block_number"),
+            gas_used=result.get("gas_used"),
             message="NFT transferred successfully"
         )
     

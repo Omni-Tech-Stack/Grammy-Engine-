@@ -5,6 +5,7 @@ Handles on-chain operations including NFT minting, ownership, and marketplace
 import os
 import logging
 import time
+import threading
 from typing import Optional, Dict, Any
 from web3 import Web3
 from web3.middleware import geth_poa_middleware
@@ -36,9 +37,9 @@ MAX_RETRY_DELAY = float(os.getenv("WEB3_MAX_RETRY_DELAY", "30.0"))  # seconds
 w3: Optional[Web3] = None
 account: Optional[Account] = None
 
-# Nonce tracking (in-memory cache to avoid gaps)
+# Nonce tracking (in-memory cache to avoid gaps) with thread safety
 _nonce_cache: Dict[str, int] = {}
-_nonce_lock = None  # For thread safety in production, use threading.Lock()
+_nonce_lock = threading.Lock()
 
 
 def init_web3() -> Web3:
@@ -95,6 +96,7 @@ def get_web3() -> Optional[Web3]:
 def get_next_nonce(address: str, web3: Web3) -> int:
     """
     Get next nonce for address with local caching to prevent gaps
+    Thread-safe implementation using locks.
     
     Args:
         address: Ethereum address
@@ -105,35 +107,38 @@ def get_next_nonce(address: str, web3: Web3) -> int:
     """
     global _nonce_cache
     
-    # Get on-chain nonce
-    onchain_nonce = web3.eth.get_transaction_count(address, 'pending')
-    
-    # Check cached nonce
-    cached_nonce = _nonce_cache.get(address, 0)
-    
-    # Use the higher of cached or on-chain nonce
-    next_nonce = max(onchain_nonce, cached_nonce)
-    
-    # Update cache
-    _nonce_cache[address] = next_nonce + 1
-    
-    logger.debug(f"Nonce for {address}: on-chain={onchain_nonce}, cached={cached_nonce}, using={next_nonce}")
-    
-    return next_nonce
+    with _nonce_lock:
+        # Get on-chain nonce
+        onchain_nonce = web3.eth.get_transaction_count(address, 'pending')
+        
+        # Check cached nonce
+        cached_nonce = _nonce_cache.get(address, 0)
+        
+        # Use the higher of cached or on-chain nonce
+        next_nonce = max(onchain_nonce, cached_nonce)
+        
+        # Update cache
+        _nonce_cache[address] = next_nonce + 1
+        
+        logger.debug(f"Nonce for {address}: on-chain={onchain_nonce}, cached={cached_nonce}, using={next_nonce}")
+        
+        return next_nonce
 
 
 def reset_nonce_cache(address: str):
     """
     Reset nonce cache for an address (call after transaction failure)
+    Thread-safe implementation.
     
     Args:
         address: Ethereum address
     """
     global _nonce_cache
     
-    if address in _nonce_cache:
-        del _nonce_cache[address]
-        logger.debug(f"Reset nonce cache for {address}")
+    with _nonce_lock:
+        if address in _nonce_cache:
+            del _nonce_cache[address]
+            logger.debug(f"Reset nonce cache for {address}")
 
 
 def retry_with_exponential_backoff(func, max_retries: int = MAX_RETRIES, 
@@ -171,11 +176,16 @@ def retry_with_exponential_backoff(func, max_retries: int = MAX_RETRIES,
                     'timeout',
                     'network',
                     'nonce too low',
-                    'replacement transaction underpriced',
-                    'already known'
+                    'replacement transaction underpriced'
                 ]
                 
                 is_retryable = any(err in error_str for err in retryable_errors)
+                
+                # Special handling for 'already known' - transaction was already submitted
+                if 'already known' in error_str:
+                    logger.info(f"Transaction already known/submitted: {e}")
+                    # Return None to indicate success (transaction already in mempool)
+                    return None
                 
                 if is_retryable:
                     logger.warning(f"Attempt {attempt + 1}/{max_retries + 1} failed: {e}. Retrying in {delay}s...")
@@ -189,7 +199,9 @@ def retry_with_exponential_backoff(func, max_retries: int = MAX_RETRIES,
             else:
                 logger.error(f"All {max_retries + 1} attempts failed")
     
-    raise last_exception
+    if last_exception:
+        raise last_exception
+    raise RuntimeError("Retry function failed without exception")
 
 
 def get_contract(contract_address: str = None, abi: list = None):
@@ -351,6 +363,9 @@ def mint_nft(
             "nonce": nonce,
             "owner": checksummed_owner,
             "metadata_uri": metadata_uri,
+            "token_id": None,  # Will be available after transaction is mined
+            "block_number": None,  # Will be available after transaction is mined
+            "gas_used": None,  # Will be available after transaction is mined
             "message": "Transaction submitted. Poll transaction status separately."
         }
     
@@ -475,6 +490,8 @@ def transfer_nft(
             "transaction_hash": tx_hash.hex(),
             "status": "pending",
             "nonce": nonce,
+            "block_number": None,  # Will be available after transaction is mined
+            "gas_used": None,  # Will be available after transaction is mined
             "message": "Transaction submitted. Poll transaction status separately."
         }
     

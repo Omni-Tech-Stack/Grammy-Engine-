@@ -32,9 +32,9 @@ except ImportError as e:
     sys.exit(1)
 
 try:
-    import scipy
+    from scipy.io import wavfile
     import numpy as np
-    print(f"✓ Audio processing libraries (scipy {scipy.__version__}, numpy {np.__version__})")
+    print(f"✓ Audio processing libraries (scipy.io.wavfile, numpy {np.__version__})")
 except ImportError as e:
     print(f"✗ FAILED: Audio libraries not installed: {e}")
     sys.exit(1)
