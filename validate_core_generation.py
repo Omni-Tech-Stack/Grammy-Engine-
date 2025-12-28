@@ -127,7 +127,6 @@ print("TEST 4: Saving Audio to File")
 print("-" * 70)
 
 try:
-    import scipy.io.wavfile as wavfile
     
     output_file = "/tmp/grammy_test_output.wav"
     
