@@ -72,7 +72,7 @@ export default function Home() {
             </h2>
 
             <p className="text-xl text-gray-300 mb-12 max-w-3xl mx-auto">
-              The world's first autonomous AI record label. Create, mix, master, and distribute professional music in minutes - no musical experience required.
+              The world&apos;s first autonomous AI record label. Create, mix, master, and distribute professional music in minutes - no musical experience required.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
@@ -302,7 +302,7 @@ export default function Home() {
         {/* Footer */}
         <footer className="border-t border-gray-800 py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-400">
-            <p>Grammy Engine™ - The World's First Autonomous AI Record Label</p>
+            <p>Grammy Engine™ - The World&apos;s First Autonomous AI Record Label</p>
             <p className="mt-2 text-sm">
               © 2025 Omni-Tech-Stack. All rights reserved.
             </p>

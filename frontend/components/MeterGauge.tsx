@@ -1,7 +1,7 @@
 /**
  * MeterGauge Component - Grammy Meter Score Display
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { api } from '../lib/api';
 
 interface MeterGaugeProps {
@@ -13,13 +13,7 @@ export default function MeterGauge({ trackId }: MeterGaugeProps) {
   const [analysis, setAnalysis] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (trackId) {
-      fetchScore();
-    }
-  }, [trackId]);
-
-  const fetchScore = async () => {
+  const fetchScore = useCallback(async () => {
     if (!trackId) return;
 
     setLoading(true);
@@ -32,7 +26,13 @@ export default function MeterGauge({ trackId }: MeterGaugeProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [trackId]);
+
+  useEffect(() => {
+    if (trackId) {
+      fetchScore();
+    }
+  }, [trackId, fetchScore]);
 
   const getScoreColor = (score: number) => {
     if (score >= 85) return 'text-yellow-400';
