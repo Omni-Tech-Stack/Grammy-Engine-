@@ -95,15 +95,16 @@ contract GrammyNFT is ERC721, ERC721URIStorage, ERC721Royalty, Ownable {
     }
     
     /**
-     * @dev Mint NFT with default 10% royalty
-     * Convenience function that calls mintTrack with default royalty
+     * @dev Mint NFT with default 10% royalty.
+     * Convenience function that calls {mintTrack} with a default royalty
+     * of 1000 basis points (10%), where 10000 basis points = 100%.
      */
     function mintTrackWithDefaultRoyalty(
         address to,
         string memory trackId,
         string memory metadataURI
     ) public onlyOwner returns (uint256) {
-        return mintTrack(to, trackId, metadataURI, 1000); // 10% default
+        return mintTrack(to, trackId, metadataURI, 1000); // 10% default (1000 basis points)
     }
     
     /**
