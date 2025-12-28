@@ -71,7 +71,6 @@ contract GrammyNFT is ERC721, ERC721URIStorage, ERC721Royalty, Ownable {
         
         // Get next token ID and increment
         uint256 tokenId = _nextTokenId++;
-
         
         // Mint NFT
         _safeMint(to, tokenId);
