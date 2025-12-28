@@ -2,10 +2,11 @@
 Blockchain API - On-chain operations for Grammy Engine
 Handles NFT minting, transfers, and marketplace operations
 """
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
+from typing import Optional
 import logging
+import os
 
 from services.web3_service import (
     mint_nft,
@@ -95,13 +96,21 @@ async def mint_track_nft(request: MintNFTRequest):
     """
     Mint NFT for a music track on-chain
     
+    **IMPORTANT: This endpoint requires authentication and authorization.**
+    Only authenticated users who own the track should be able to mint NFTs.
+    
     This creates an ERC721 NFT on the blockchain representing ownership
     of the music track. The NFT includes:
     - Ownership record
     - Metadata URI (IPFS/HTTP link to track info)
     - Built-in royalty support
     
-    **On-chain operation** - requires blockchain connection
+    **On-chain operation** - requires blockchain connection and authentication
+    
+    **Security Note:** In production, this endpoint MUST be protected with:
+    - User authentication (JWT/OAuth)
+    - Track ownership verification
+    - Rate limiting to prevent abuse
     """
     try:
         # Check if blockchain is enabled
@@ -111,17 +120,18 @@ async def mint_track_nft(request: MintNFTRequest):
                 detail="Blockchain features not configured. Please set WEB3_RPC_URL and WEB3_PRIVATE_KEY"
             )
         
+        # TODO: Add authentication check here
+        # current_user = Depends(get_current_user)
+        # Verify current_user owns the track with track_id
+        
         logger.info(f"Minting NFT for track {request.track_id}")
         
-        # Convert royalty percentage to basis points (10000 = 100%)
-        royalty_bp = request.royalty_percentage * 100
-        
-        # Mint NFT on-chain
-        result = await mint_nft(
+        # Mint NFT on-chain (now synchronous)
+        result = mint_nft(
             track_id=request.track_id,
             owner_address=request.owner_address,
             metadata_uri=request.metadata_uri,
-            royalty_percentage=royalty_bp
+            royalty_percentage=request.royalty_percentage
         )
         
         # Update database with NFT info
@@ -129,10 +139,10 @@ async def mint_track_nft(request: MintNFTRequest):
         if supabase:
             try:
                 supabase.table("tracks").update({
-                    "nft_token_id": result.get("token_id"),
                     "nft_transaction_hash": result.get("transaction_hash"),
                     "nft_minted": True,
-                    "nft_owner": request.owner_address
+                    "nft_owner": request.owner_address,
+                    "nft_status": result.get("status", "pending")
                 }).eq("id", request.track_id).execute()
             except Exception as e:
                 logger.warning(f"Failed to update database with NFT info: {e}")
@@ -141,11 +151,11 @@ async def mint_track_nft(request: MintNFTRequest):
             success=True,
             transaction_hash=result["transaction_hash"],
             token_id=result.get("token_id"),
-            block_number=result["block_number"],
-            gas_used=result["gas_used"],
+            block_number=result.get("block_number", 0),
+            gas_used=result.get("gas_used", 0),
             owner=result["owner"],
             metadata_uri=result["metadata_uri"],
-            message="NFT minted successfully"
+            message=result.get("message", "NFT minted successfully")
         )
     
     except HTTPException:
@@ -160,9 +170,17 @@ async def transfer_track_nft(request: TransferNFTRequest):
     """
     Transfer NFT ownership on-chain
     
+    **IMPORTANT: This endpoint requires authentication and authorization.**
+    Only the current NFT owner should be able to transfer ownership.
+    
     Transfers ownership of a track NFT from one wallet to another.
     
-    **On-chain operation** - requires blockchain connection
+    **On-chain operation** - requires blockchain connection and authentication
+    
+    **Security Note:** In production, this endpoint MUST be protected with:
+    - User authentication (JWT/OAuth)
+    - Ownership verification (caller must own the NFT)
+    - Rate limiting to prevent abuse
     """
     try:
         # Check if blockchain is enabled
@@ -172,10 +190,17 @@ async def transfer_track_nft(request: TransferNFTRequest):
                 detail="Blockchain features not configured"
             )
         
+        # TODO: Add authentication and authorization checks
+        # current_user = Depends(get_current_user)
+        # Verify current_user owns the NFT with token_id
+        # owner = get_nft_owner(request.token_id)
+        # if owner.lower() != current_user.wallet_address.lower():
+        #     raise HTTPException(403, "Not authorized to transfer this NFT")
+        
         logger.info(f"Transferring NFT {request.token_id}")
         
-        # Transfer NFT on-chain
-        result = await transfer_nft(
+        # Transfer NFT on-chain (now synchronous)
+        result = transfer_nft(
             token_id=request.token_id,
             from_address=request.from_address,
             to_address=request.to_address
@@ -227,9 +252,9 @@ async def get_nft_info(token_id: int):
                 detail="Blockchain features not configured"
             )
         
-        # Get NFT info from blockchain
-        owner = await get_nft_owner(token_id)
-        metadata_uri = await get_nft_metadata(token_id)
+        # Get NFT info from blockchain (now synchronous)
+        owner = get_nft_owner(token_id)
+        metadata_uri = get_nft_metadata(token_id)
         
         # Get track ID from database
         supabase = get_supabase()
@@ -242,8 +267,6 @@ async def get_nft_info(token_id: int):
                     track_id = result.data.get("id")
             except Exception as e:
                 logger.warning(f"Failed to get track ID: {e}")
-        
-        import os
         
         return NFTInfoResponse(
             token_id=token_id,
@@ -278,9 +301,8 @@ async def get_balance(address: str):
                 detail="Blockchain features not configured"
             )
         
-        balance = await get_wallet_balance(address)
+        balance = get_wallet_balance(address)
         
-        import os
         chain_id = int(os.getenv("WEB3_CHAIN_ID", "1"))
         currency = "ETH" if chain_id == 1 else "MATIC" if chain_id == 137 else "ETH"
         
@@ -317,7 +339,7 @@ async def estimate_gas(transaction_type: str = "mint"):
                 detail="Blockchain features not configured"
             )
         
-        estimate = await estimate_gas_fee(transaction_type)
+        estimate = estimate_gas_fee(transaction_type)
         
         return GasFeeEstimate(
             gas_price_gwei=float(estimate["gas_price_gwei"]),

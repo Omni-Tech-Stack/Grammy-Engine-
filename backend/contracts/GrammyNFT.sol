@@ -5,7 +5,6 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Royalty.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
 
 /**
  * @title GrammyNFT
@@ -18,10 +17,8 @@ import "@openzeppelin/contracts/utils/Counters.sol";
  * - Marketplace integration ready
  */
 contract GrammyNFT is ERC721, ERC721URIStorage, ERC721Royalty, Ownable {
-    using Counters for Counters.Counter;
-    
-    // Token ID counter
-    Counters.Counter private _tokenIdCounter;
+    // Token ID counter (replaces deprecated Counters library)
+    uint256 private _nextTokenId = 1;
     
     // Mapping from token ID to track ID (off-chain reference)
     mapping(uint256 => string) private _trackIds;
@@ -51,8 +48,7 @@ contract GrammyNFT is ERC721, ERC721URIStorage, ERC721Royalty, Ownable {
      * @dev Constructor
      */
     constructor() ERC721("Grammy Engine Track", "GRMY") Ownable(msg.sender) {
-        // Start token IDs at 1
-        _tokenIdCounter.increment();
+        // Token IDs start at 1 (initialized above)
     }
     
     /**
@@ -73,9 +69,9 @@ contract GrammyNFT is ERC721, ERC721URIStorage, ERC721Royalty, Ownable {
         require(_trackToToken[trackId] == 0, "Track already minted");
         require(royaltyPercentage <= 10000, "Royalty too high");
         
-        // Get next token ID
-        uint256 tokenId = _tokenIdCounter.current();
-        _tokenIdCounter.increment();
+        // Get next token ID and increment
+        uint256 tokenId = _nextTokenId++;
+
         
         // Mint NFT
         _safeMint(to, tokenId);
@@ -113,7 +109,7 @@ contract GrammyNFT is ERC721, ERC721URIStorage, ERC721Royalty, Ownable {
      * @dev Get track ID for token
      */
     function getTrackId(uint256 tokenId) public view returns (string memory) {
-        require(_exists(tokenId), "Token does not exist");
+        require(_ownerOf(tokenId) != address(0), "Token does not exist");
         return _trackIds[tokenId];
     }
     
@@ -130,7 +126,7 @@ contract GrammyNFT is ERC721, ERC721URIStorage, ERC721Royalty, Ownable {
      * @dev Get mint timestamp for token
      */
     function getMintTimestamp(uint256 tokenId) public view returns (uint256) {
-        require(_exists(tokenId), "Token does not exist");
+        require(_ownerOf(tokenId) != address(0), "Token does not exist");
         return _mintTimestamps[tokenId];
     }
     
@@ -145,7 +141,7 @@ contract GrammyNFT is ERC721, ERC721URIStorage, ERC721Royalty, Ownable {
      * @dev Get total number of minted tracks
      */
     function totalSupply() public view returns (uint256) {
-        return _tokenIdCounter.current() - 1;
+        return _nextTokenId - 1;
     }
     
     /**
@@ -182,13 +178,6 @@ contract GrammyNFT is ERC721, ERC721URIStorage, ERC721Royalty, Ownable {
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
-    }
-    
-    /**
-     * @dev Internal function to check if token exists
-     */
-    function _exists(uint256 tokenId) internal view returns (bool) {
-        return _ownerOf(tokenId) != address(0);
     }
     
     /**

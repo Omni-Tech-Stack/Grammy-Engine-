@@ -48,7 +48,8 @@ def init_web3() -> Web3:
         # Load account if private key is provided
         if PRIVATE_KEY:
             account = Account.from_key(PRIVATE_KEY)
-            logger.info(f"Web3 account loaded: {account.address}")
+            # Only log address, never log the private key
+            logger.info(f"Web3 account configured")
         
         logger.info(f"Web3 initialized on chain {CHAIN_ID}")
         return w3
@@ -121,14 +122,14 @@ def get_contract(contract_address: str = None, abi: list = None):
         raise
 
 
-async def mint_nft(
+def mint_nft(
     track_id: str,
     owner_address: str,
     metadata_uri: str,
     royalty_percentage: int = 10
 ) -> Dict[str, Any]:
     """
-    Mint NFT for a music track on-chain
+    Mint NFT for a music track on-chain (synchronous operation)
     
     Args:
         track_id: Unique track identifier
@@ -150,23 +151,66 @@ async def mint_nft(
         if not account:
             raise ValueError("Web3 account not configured")
         
+        # Validate Ethereum addresses
+        if not Web3.is_address(owner_address):
+            raise ValueError(f"Invalid owner address: {owner_address}")
+        
+        owner_address = Web3.to_checksum_address(owner_address)
+        
         # Get contract
         contract = get_contract()
         
         # Prepare transaction
         nonce = web3.eth.get_transaction_count(account.address)
         
-        # Build mint transaction
-        mint_tx = contract.functions.mintTrack(
+        # Convert royalty percentage to basis points (10000 = 100%)
+        royalty_bp = royalty_percentage * 100
+        
+        # Estimate gas for the transaction
+        mint_function = contract.functions.mintTrack(
             owner_address,
+            track_id,
             metadata_uri,
-            royalty_percentage
-        ).build_transaction({
+            royalty_bp
+        )
+        
+        # Build transaction parameters
+        tx_params = {
+            'from': account.address,
             'chainId': CHAIN_ID,
-            'gas': 500000,
-            'gasPrice': web3.eth.gas_price,
             'nonce': nonce,
-        })
+        }
+        
+        # Estimate gas with safety buffer
+        try:
+            estimated_gas = mint_function.estimate_gas(tx_params)
+            gas_limit = int(estimated_gas * 1.2)  # 20% safety buffer
+        except Exception as e:
+            logger.warning(f"Gas estimation failed, using default: {e}")
+            gas_limit = 500000  # Fallback to conservative limit
+        
+        tx_params['gas'] = gas_limit
+        
+        # Use EIP-1559 fee mechanism if supported
+        try:
+            latest_block = web3.eth.get_block('latest')
+            if 'baseFeePerGas' in latest_block:
+                # EIP-1559 transaction
+                max_priority_fee = web3.eth.max_priority_fee
+                base_fee = latest_block['baseFeePerGas']
+                max_fee = base_fee * 2 + max_priority_fee
+                
+                tx_params['maxFeePerGas'] = max_fee
+                tx_params['maxPriorityFeePerGas'] = max_priority_fee
+            else:
+                # Legacy transaction
+                tx_params['gasPrice'] = web3.eth.gas_price
+        except Exception as e:
+            logger.warning(f"Failed to use EIP-1559, falling back to legacy: {e}")
+            tx_params['gasPrice'] = web3.eth.gas_price
+        
+        # Build mint transaction
+        mint_tx = mint_function.build_transaction(tx_params)
         
         # Sign transaction
         signed_tx = web3.eth.account.sign_transaction(mint_tx, PRIVATE_KEY)
@@ -176,28 +220,15 @@ async def mint_nft(
         
         logger.info(f"NFT mint transaction sent: {tx_hash.hex()}")
         
-        # Wait for receipt
-        tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash, timeout=120)
-        
-        # Extract token ID from logs
-        token_id = None
-        if tx_receipt.logs:
-            # Parse Transfer event to get token ID
-            try:
-                transfer_event = contract.events.Transfer().process_receipt(tx_receipt)
-                if transfer_event:
-                    token_id = transfer_event[0]['args']['tokenId']
-            except Exception as e:
-                logger.warning(f"Could not parse token ID from logs: {e}")
-        
+        # Return immediately with transaction hash (don't wait for confirmation)
+        # Caller should poll for transaction status separately to avoid blocking
         result = {
             "success": True,
             "transaction_hash": tx_hash.hex(),
-            "token_id": token_id,
-            "block_number": tx_receipt['blockNumber'],
-            "gas_used": tx_receipt['gasUsed'],
+            "status": "pending",
             "owner": owner_address,
-            "metadata_uri": metadata_uri
+            "metadata_uri": metadata_uri,
+            "message": "Transaction submitted. Poll transaction status separately."
         }
         
         logger.info(f"NFT minted successfully: Token ID {token_id}")
@@ -209,13 +240,13 @@ async def mint_nft(
         raise
 
 
-async def transfer_nft(
+def transfer_nft(
     token_id: int,
     from_address: str,
     to_address: str
 ) -> Dict[str, Any]:
     """
-    Transfer NFT ownership on-chain
+    Transfer NFT ownership on-chain (synchronous operation)
     
     Args:
         token_id: NFT token ID
@@ -232,6 +263,13 @@ async def transfer_nft(
         
         if not web3 or not account:
             raise ValueError("Web3 not initialized")
+        
+        # Validate addresses
+        if not Web3.is_address(from_address) or not Web3.is_address(to_address):
+            raise ValueError("Invalid Ethereum address")
+        
+        from_address = Web3.to_checksum_address(from_address)
+        to_address = Web3.to_checksum_address(to_address)
         
         # Get contract
         contract = get_contract()
@@ -276,7 +314,7 @@ async def transfer_nft(
         raise
 
 
-async def get_nft_owner(token_id: int) -> str:
+def get_nft_owner(token_id: int) -> str:
     """
     Get current owner of NFT
     
@@ -303,7 +341,7 @@ async def get_nft_owner(token_id: int) -> str:
         raise
 
 
-async def get_nft_metadata(token_id: int) -> str:
+def get_nft_metadata(token_id: int) -> str:
     """
     Get NFT metadata URI
     
@@ -330,7 +368,7 @@ async def get_nft_metadata(token_id: int) -> str:
         raise
 
 
-async def get_wallet_balance(address: str) -> float:
+def get_wallet_balance(address: str) -> float:
     """
     Get ETH/MATIC balance of wallet
     
@@ -356,7 +394,7 @@ async def get_wallet_balance(address: str) -> float:
         raise
 
 
-async def estimate_gas_fee(transaction_type: str = "mint") -> Dict[str, float]:
+def estimate_gas_fee(transaction_type: str = "mint") -> Dict[str, float]:
     """
     Estimate gas fee for transaction
     

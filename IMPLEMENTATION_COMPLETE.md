@@ -266,23 +266,36 @@ curl -X POST http://localhost:8000/api/songgen/generate \
 
 ### When You Want NFT Features:
 
+**⚠️ SECURITY WARNING:** The blockchain endpoints require proper authentication and authorization in production. The example below is for development/testing only.
+
+**Production Requirements:**
+- Add JWT authentication to all minting/transfer endpoints
+- Verify track ownership before minting
+- Verify NFT ownership before transfers
+- Use a secure key management system (AWS KMS, HashiCorp Vault)
+- Never expose private keys in environment variables
+- Implement rate limiting and monitoring
+
 1. **Deploy Smart Contract**
    ```bash
    # Using Hardhat/Foundry
    npx hardhat deploy --network polygon
    ```
 
-2. **Configure Web3**
+2. **Configure Web3 (Development Only)**
    ```env
-   WEB3_RPC_URL=https://polygon-mainnet.infura.io/v3/YOUR-KEY
-   WEB3_CHAIN_ID=137
-   WEB3_PRIVATE_KEY=your-key
+   WEB3_RPC_URL=https://polygon-testnet.infura.io/v3/YOUR-KEY
+   WEB3_CHAIN_ID=80001  # Mumbai testnet
+   WEB3_PRIVATE_KEY=0x...  # Use testnet key only!
    NFT_CONTRACT_ADDRESS=deployed-contract
    ```
 
-3. **Mint NFT for Track**
+3. **Mint NFT for Track (Requires Authentication)**
    ```bash
+   # In production, this MUST be authenticated
+   # Only the track owner should be able to mint
    curl -X POST http://localhost:8000/api/blockchain/nft/mint \
+     -H "Authorization: ******" \
      -d '{
        "track_id": "uuid",
        "owner_address": "0x...",

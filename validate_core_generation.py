@@ -34,7 +34,7 @@ except ImportError as e:
 try:
     import scipy
     import numpy as np
-    print(f"✓ Audio processing libraries (scipy, numpy)")
+    print(f"✓ Audio processing libraries (scipy {scipy.__version__}, numpy {np.__version__})")
 except ImportError as e:
     print(f"✗ FAILED: Audio libraries not installed: {e}")
     sys.exit(1)
