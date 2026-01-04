@@ -34,6 +34,7 @@ frontend/.next/
 frontend/out/
 frontend/build/
 frontend/dist/
+frontend/tsconfig.tsbuildinfo
 
 # Node
 frontend/node_modules/
@@ -116,3 +117,7 @@ Thumbs.db
 secrets.yaml
 credentials.json
 serviceAccountKey.json
+
+# Railway
+.railway/
+railway.toml

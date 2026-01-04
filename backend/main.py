@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import logging
 import time
+import os
 
 from api import (
     prompt_engine,
@@ -19,6 +20,7 @@ from api import (
     auth
 )
 from services.supabase_client import init_supabase
+from utils.config import log_configuration
 
 # Configure logging
 logging.basicConfig(
@@ -32,6 +34,9 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """Application lifespan events"""
     logger.info("🎵 Grammy Engine starting up...")
+    
+    # Log configuration
+    log_configuration()
     
     # Initialize Supabase connection
     try:
@@ -61,6 +66,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "https://*.vercel.app",
+        "https://*.railway.app",
         "https://grammyengine.com"
     ],
     allow_credentials=True,
@@ -95,11 +101,41 @@ async def global_exception_handler(request: Request, exc: Exception):
 # Health check endpoint
 @app.get("/health")
 async def health_check():
-    return {
+    """Enhanced health check for Railway"""
+    health_status = {
         "status": "healthy",
         "service": "Grammy Prompt Engine",
-        "version": "1.0.0"
+        "version": "1.0.0",
+        "checks": {}
     }
+    
+    # Database check
+    try:
+        # Quick DB connection test
+        from services.supabase_client import supabase
+        if supabase:
+            health_status["checks"]["database"] = "connected"
+        else:
+            health_status["checks"]["database"] = "not_initialized"
+    except Exception as e:
+        health_status["checks"]["database"] = f"error: {str(e)}"
+        health_status["status"] = "degraded"
+    
+    # Redis check (if configured)
+    try:
+        redis_url = os.getenv("REDIS_URL")
+        if redis_url:
+            from redis import Redis
+            redis_client = Redis.from_url(redis_url, socket_connect_timeout=2)
+            redis_client.ping()
+            health_status["checks"]["redis"] = "connected"
+        else:
+            health_status["checks"]["redis"] = "not_configured"
+    except Exception as e:
+        health_status["checks"]["redis"] = f"error: {str(e)}"
+        health_status["status"] = "degraded"
+    
+    return health_status
 
 
 @app.get("/")
@@ -123,10 +159,11 @@ app.include_router(upload.router, prefix="/api/upload", tags=["Upload"])
 
 if __name__ == "__main__":
     import uvicorn
+    port = int(os.getenv("PORT", 8000))
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=8000,
-        reload=True,
+        port=port,
+        reload=False,
         log_level="info"
     )

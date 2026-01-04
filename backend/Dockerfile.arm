@@ -1,9 +1,9 @@
-# Multi-architecture Dockerfile for Grammy Engine
-# Automatically optimizes for ARM64 and AMD64
+# ARM-optimized Dockerfile for Grammy Engine
+# Supports both ARM64 and AMD64 architectures with automatic optimization
 
-FROM python:3.11-slim
+FROM --platform=$TARGETPLATFORM python:3.11-slim
 
-# Build arguments for platform detection
+# Build arguments for multi-arch support
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 
@@ -11,6 +11,7 @@ ARG BUILDPLATFORM
 WORKDIR /app
 
 # Install system dependencies
+# Use lighter alternatives for ARM
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     libsndfile1 \
@@ -22,16 +23,15 @@ RUN apt-get update && apt-get install -y \
 # Copy requirements first for better caching
 COPY requirements.txt .
 
-# Install Python dependencies
-# Optimized for both ARM and x86
+# Install Python dependencies with ARM optimizations
+# Use --no-cache-dir to reduce image size
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY . .
 
-# Environment variables
-# LIGHTWEIGHT_MODE=auto enables ARM optimization automatically
+# Set environment variables for ARM optimization
 ENV LIGHTWEIGHT_MODE=auto
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
