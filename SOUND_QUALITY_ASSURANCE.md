@@ -1,8 +1,8 @@
 # 🎵 Sound Quality Assurance - Grammy Engine
 
-## How We Ensure Desirable Sound & Vocals
+## How We Ensure Desirable Sound & Vocals for 2-6 Minute Industry-Ready Tracks
 
-Grammy Engine uses **industry-standard AI models and professional audio processing** to guarantee high-quality output. This document explains the technical mechanisms that ensure your music sounds professional.
+Grammy Engine uses **industry-standard AI models and professional audio processing** to guarantee high-quality output for full-length 2-6 minute songs. This document explains the technical mechanisms that ensure your music sounds professional and radio-ready.
 
 ---
 
@@ -11,7 +11,7 @@ Grammy Engine uses **industry-standard AI models and professional audio processi
 ### **Meta's MusicGen Model**
 **Location**: `backend/services/musicgen_service.py`
 
-Grammy Engine uses **facebook/musicgen-medium**, Meta's state-of-the-art music generation model:
+Grammy Engine uses **facebook/musicgen-medium**, Meta's state-of-the-art music generation model with enhanced capabilities for 2-6 minute industry-ready tracks:
 
 #### **Quality Guarantees:**
 1. **Professional Training Data**
@@ -25,7 +25,14 @@ Grammy Engine uses **facebook/musicgen-medium**, Meta's state-of-the-art music g
    - Stereo output support
    - Context-aware musical coherence
 
-3. **Quality Controls in Code:**
+3. **Extended Duration Support (NEW)**
+   - Supports 2-6 minute track generation (120-360 seconds)
+   - Intelligent segmentation for longer tracks
+   - Professional arrangement with intro, verse, chorus, bridge, outro structure
+   - Smooth crossfades between segments (5 seconds)
+   - Dynamic variation to prevent repetition
+
+4. **Quality Controls in Code:**
    ```python
    # Line 86-94: Advanced sampling parameters
    audio_values = musicgen_model.generate(
@@ -38,7 +45,7 @@ Grammy Engine uses **facebook/musicgen-medium**, Meta's state-of-the-art music g
    )
    ```
 
-4. **Normalization & Quality Checks**
+5. **Normalization & Quality Checks**
    ```python
    # Line 102-106: Audio normalization prevents distortion
    audio_array = audio_array / np.max(np.abs(audio_array))
@@ -50,6 +57,33 @@ Grammy Engine uses **facebook/musicgen-medium**, Meta's state-of-the-art music g
 - ✅ Musical coherence (chords, melody, rhythm align)
 - ✅ Genre-appropriate instrumentation
 - ✅ Professional mixing balance
+
+#### **Long-Form Generation Technology:**
+For 2-6 minute tracks, Grammy Engine uses an intelligent segmentation approach:
+
+1. **Segment-Based Generation**
+   - Tracks >60s are generated in 45-second segments
+   - Each segment maintains musical coherence
+   - Professional crossfades (5 seconds) between segments
+
+2. **Dynamic Arrangement**
+   ```python
+   # Automatic song structure
+   - Segment 1: Intro and opening
+   - Segments 2-N: Main body with variation
+   - Final segment: Outro and ending
+   ```
+
+3. **Quality Preservation**
+   - Consistent quality throughout full duration
+   - No degradation in later segments
+   - Professional fade-in (2s) and fade-out (3s)
+   - Volume normalization for consistent loudness
+
+4. **Anti-Repetition**
+   - Variation prompts for different segments
+   - Energy modulation throughout track
+   - Prevents monotonous looping
 
 ---
 
@@ -267,6 +301,7 @@ These are the **same metrics used by**:
 |-----------|-------|-------------------|
 | Sample Rate | 44.1 kHz | CD Quality ✅ |
 | Bit Depth | 16-bit | Broadcast Standard ✅ |
+| Duration Range | 120-360s (2-6 min) | Radio/Streaming Ready ✅ |
 | Loudness | -14 LUFS | Spotify/Apple Music ✅ |
 | Dynamic Range | 8-12 dB | Professional Mix ✅ |
 | Peak Level | -0.3 dB | No Clipping ✅ |

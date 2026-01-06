@@ -19,14 +19,14 @@
 
 Grammy Engine is the **world's first fully autonomous AI record label**. It handles the complete music production pipeline from a simple text prompt to a radio-ready, professionally mastered track with commercial distribution.
 
-### **One Prompt → Grammy-Worthy Track**
+### **One Prompt → Grammy-Worthy Track (2-6 Minutes)**
 
 ```
 User Input: "Upbeat summer pop song with tropical vibes, catchy chorus, 120 BPM"
          ↓
    [AI Magic]
          ↓
-Output: Professional track ready for Spotify, Apple Music, TikTok
+Output: Professional 2-6 minute track ready for Spotify, Apple Music, TikTok
 ```
 
 ## ✨ Key Features
@@ -36,7 +36,7 @@ Output: Professional track ready for Spotify, Apple Music, TikTok
 | Module | Function | Technology |
 |--------|----------|------------|
 | **Language Layer** | Interprets emotion, genre, intent | GPT-5, Claude |
-| **Composition Engine** | Generates professional instrumentals | MusicGen (Meta) |
+| **Composition Engine** | Generates 2-6 min professional tracks | MusicGen (Meta) |
 | **Vocal Engine** | Clones, morphs, creates vocals | So-VITS-SVC, DiffSinger |
 | **Mix/Master AI** | Finalizes to radio standards | Matchering, FFmpeg |
 | **Grammy Meter™** | Predicts hit potential (0-100) | Custom ONNX model |
@@ -122,8 +122,9 @@ docker-compose up -d
 2. Sign up for a free account
 3. Click "Generate Track"
 4. Enter: "Chill lo-fi hip hop beat for studying, 85 BPM"
-5. Wait 30-60 seconds
-6. Download your professional track!
+5. Select duration: 180 seconds (3 minutes) or up to 360 seconds (6 minutes)
+6. Wait 2-5 minutes (depending on duration)
+7. Download your professional Grammy-tier track!
 
 ### **ARM/Lightweight Mode**
 

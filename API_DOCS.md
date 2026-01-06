@@ -236,16 +236,16 @@ Authorization: Bearer {access_token}
 
 **Parameters:**
 - `prompt` (required): Music description
-- `duration` (optional): Length in seconds (15-300, default: 30)
+- `duration` (optional): Length in seconds (60-360, default: 180) - Industry-ready 1-6 minute tracks
 - `model` (optional): `musicgen-small`, `musicgen-medium`, `musicgen-large` (default: `medium`)
 - `quality` (optional): `draft`, `standard`, `high` (default: `standard`)
 - `temperature` (optional): Creativity level 0.0-1.5 (default: 1.0)
 - `top_k` (optional): Sampling diversity 0-250 (default: 250)
 
 **Tier Limits:**
-- Free: 3 tracks/month, max 30s, `musicgen-small` only
-- Pro: Unlimited, max 180s, all models
-- Label: Unlimited, max 300s, all models, priority queue
+- Free: 3 tracks/month, max 180s (3 min), `musicgen-small` only
+- Pro: Unlimited, max 300s (5 min), all models
+- Label: Unlimited, max 360s (6 min), all models, priority queue
 
 ---
 
@@ -777,7 +777,7 @@ GET /subscriptions/tiers
       "interval": "month",
       "features": {
         "tracks_per_month": 3,
-        "max_duration": 30,
+        "max_duration": 180,
         "models": ["musicgen-small"],
         "mastering": false,
         "grammy_meter": false,
@@ -792,7 +792,7 @@ GET /subscriptions/tiers
       "stripe_price_id": "price_1234567890",
       "features": {
         "tracks_per_month": 9999,
-        "max_duration": 180,
+        "max_duration": 300,
         "models": ["musicgen-small", "musicgen-medium", "musicgen-large"],
         "mastering": true,
         "grammy_meter": true,
@@ -808,7 +808,7 @@ GET /subscriptions/tiers
       "stripe_price_id": "price_0987654321",
       "features": {
         "tracks_per_month": 9999,
-        "max_duration": 300,
+        "max_duration": 360,
         "models": ["musicgen-small", "musicgen-medium", "musicgen-large"],
         "mastering": true,
         "grammy_meter": true,
