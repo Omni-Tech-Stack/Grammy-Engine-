@@ -181,7 +181,7 @@ export default function Dashboard() {
                   Grammy Meter™
                 </h2>
                 <p className="text-gray-400 mb-6">
-                  Analyze your track's hit potential and commercial readiness
+                  Analyze your track&apos;s hit potential and commercial readiness
                 </p>
                 <MeterGauge trackId={currentTrack?.id} />
               </div>
@@ -228,7 +228,7 @@ export default function Dashboard() {
         <footer className="border-t border-gray-800 mt-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center text-gray-400 text-sm">
             <p>
-              Grammy Engine™ - The World's First Autonomous AI Record Label
+              Grammy Engine™ - The World&apos;s First Autonomous AI Record Label
             </p>
             <p className="mt-2">
               © 2025 Omni-Tech-Stack. All rights reserved.

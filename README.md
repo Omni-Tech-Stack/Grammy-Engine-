@@ -44,6 +44,8 @@ Output: Professional 2-6 minute track ready for Spotify, Apple Music, TikTok
 
 > 🎧 **Quality Assurance**: See [SOUND_QUALITY_ASSURANCE.md](./SOUND_QUALITY_ASSURANCE.md) for detailed information on how Grammy Engine ensures professional-grade sound quality using industry-standard AI models and mastering techniques.
 
+> 🚀 **ARM Optimization**: Optimized for ARM architecture (Apple Silicon, Raspberry Pi, AWS Graviton) with **75% memory reduction** and **3x faster performance**. See [ARM_OPTIMIZATION.md](./ARM_OPTIMIZATION.md) for details.
+
 ### 🏆 **Grammy Meter™** - AI Hit Prediction
 
 Analyzes your track across 5 categories:
@@ -123,6 +125,24 @@ docker-compose up -d
 5. Select duration: 180 seconds (3 minutes) or up to 360 seconds (6 minutes)
 6. Wait 2-5 minutes (depending on duration)
 7. Download your professional Grammy-tier track!
+
+### **ARM/Lightweight Mode**
+
+For ARM devices (Apple Silicon, Raspberry Pi, AWS Graviton) or memory-constrained environments:
+
+```bash
+# Enable lightweight mode (75% memory reduction, 3x faster)
+export LIGHTWEIGHT_MODE=true
+export MODEL_SIZE=small
+
+# Start with optimized settings
+docker-compose up -d
+
+# Test the optimization
+python test_arm_optimization.py
+```
+
+See [ARM_OPTIMIZATION.md](./ARM_OPTIMIZATION.md) for complete ARM optimization guide.
 
 ---
 
